@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D3.js Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: linear-gradient(135deg, #818fa8 0%, #c3edef 100%);
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      // Define the width and height of the visualization container
+      const width = 1100;
+      const height = 1100;
+
+      // Create an SVG container for the visualization
+      const svg = d3
+        .select("body")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+      // Define scales and other visualization parameters
+      const radius = Math.min(width, height) / 3;
+      const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
+      const barHeightScale = d3
+        .scaleLinear()
+        .domain([-2, 4])
+        .range([0, radius / 1.5]);
+
+      function drawYearCircle(year) {
+        // Clear previous visualization elements
+        svg.selectAll("*").remove();
+
+        // Draw the center circle
+        const circle = svg
+          .append("circle")
+          .attr("cx", width / 2)
+          .attr("cy", height / 2)
+          .attr("r", radius / 4)
+          .attr("fill", "#1f77b4");
+
+        // Add the year label
+        const yearLabel = svg
+          .append("text")
+          .attr("x", width / 2)
+          .attr("y", height / 2)
+          .attr("text-anchor", "middle")
+          .attr("dominant-baseline", "central")
+          .attr("font-size", "24px")
+          .text(year);
+
+        // Draw indicator circles
+        const indicatorValues = [-1, 0, 1, 2, 3];
+        const indicators = svg
+          .selectAll(".indicator")
+          .data(indicatorValues)
+          .enter()
+          .append("circle")
+          .attr("class", "indicator")
+          .attr("cx", width / 2)
+          .attr("cy", height / 2)
+          .attr("r", (d) => radius / 4 + barHeightScale(d))
+          .attr("fill", "none")
+          .attr("stroke", "#ccc")
+          .attr("stroke-dasharray", "2,2")
+          .attr("stroke-width", 1);
+
+        // Add degree labels
+        const degreeLabels = svg
+          .selectAll(".degree-label")
+          .data(indicatorValues)
+          .enter()
+          .append("text")
+          .attr("class", "degree-label")
+          .attr("x", width / 2)
+          .attr("y", (d) => height / 2 - (radius / 4 - 6 + barHeightScale(d)))
+          .attr("text-anchor", "end")
+          .attr("dominant-baseline", "central")
+          .attr("font-size", "10px")
+          .attr("fill", "#ccc")
+          .text((d) => `${d}°C`);
+      }
+
+      function drawBars(year, data) {
+        // Calculate the angle and position of each bar
+        const angleScale = d3
+          .scaleLinear()
+          .domain([0, data.length * 1.32])
+          .range([-2, 2 * Math.PI]);
+
+        // Draw the bars
+        // const bars = svg
+        //   .selectAll(".bar")
+        //   .data(data)
+        //   .enter()
+        //   .append("rect")
+        //   .attr("class", "bar")
+        //   .attr(
+        //     "x",
+        //     (d, i) => width / 2 + (Math.cos(angleScale(i)) * radius) / 2
+        //   )
+        //   .attr(
+        //     "y",
+        //     (d, i) => height / 2 + (Math.sin(angleScale(i)) * radius) / 2
+        //   )
+        //   .attr("width", (d) => (radius / 4) * d.value)
+        //   .attr("height", 5)
+        //   .attr("fill", (d, i) => colorScale(i))
+        //   .attr(
+        //     "transform",
+        //     (d, i) =>
+        //       `rotate(${(angleScale(i) * 180) / Math.PI - 90}, ${
+        //         width / 2 + (Math.cos(angleScale(i)) * radius) / 2
+        //       }, ${height / 2 + (Math.sin(angleScale(i)) * radius) / 2})`
+        //   );
+        // const bars = svg
+        //   .selectAll(".bar")
+        //   .data(data)
+        //   .enter()
+        //   .append("line")
+        //   .attr("class", "bar")
+        //   .attr(
+        //     "x1",
+        //     (d, i) => width / 2 + (Math.cos(angleScale(i)) * radius) / 2
+        //   )
+        //   .attr(
+        //     "y1",
+        //     (d, i) => height / 2 + (Math.sin(angleScale(i)) * radius) / 2
+        //   )
+        //   .attr(
+        //     "x2",
+        //     (d, i) =>
+        //       width / 2 +
+        //       Math.cos(angleScale(i)) *
+        //         (radius / 4 + radius / 4 + barHeightScale(d.value))
+        //   )
+        //   .attr(
+        //     "y2",
+        //     (d, i) =>
+        //       height / 2 +
+        //       Math.sin(angleScale(i)) *
+        //         (radius / 4 + radius / 4 + barHeightScale(d.value))
+        //   )
+        //   .attr("stroke", (d, i) => colorScale(i))
+        //   .attr("stroke-width", 2);
+
+        // // Draw the country labels
+        // const labels = svg
+        //   .selectAll(".label")
+        //   .data(data)
+        //   .enter()
+        //   .append("text")
+        //   .attr("class", "label")
+        //   .attr("x", (d, i) => width / 2 + Math.cos(angleScale(i)) * radius)
+        //   .attr("y", (d, i) => height / 2 + Math.sin(angleScale(i)) * radius)
+        //   .attr("text-anchor", (d, i) =>
+        //     angleScale(i) > Math.PI / 2 && angleScale(i) < (3 * Math.PI) / 2
+        //       ? "end"
+        //       : "start"
+        //   )
+        //   .attr("dominant-baseline", "central")
+        //   .attr("font-size", "10px")
+        //   .text((d) => d.country);
+        const bars = svg
+          .selectAll(".bar")
+          .data(data)
+          .enter()
+          .append("line")
+          .attr("class", "bar")
+          .attr(
+            "x1",
+            (d, i) =>
+              width / 2 +
+              Math.cos(angleScale(i)) * (radius / 4 + barHeightScale(0))
+          ) // Update the starting point to the outer edge of the inner circle
+          .attr(
+            "y1",
+            (d, i) =>
+              height / 2 +
+              Math.sin(angleScale(i)) * (radius / 4 + barHeightScale(0))
+          ) // Update the starting point to the outer edge of the inner circle
+          .attr(
+            "x2",
+            (d, i) =>
+              width / 2 +
+              Math.cos(angleScale(i)) *
+                (radius / 4 + barHeightScale(d.value || 0))
+          )
+          .attr(
+            "y2",
+            (d, i) =>
+              height / 2 +
+              Math.sin(angleScale(i)) *
+                (radius / 4 + barHeightScale(d.value || 0))
+          )
+          .attr("stroke", (d, i) => colorScale(i))
+          .attr("stroke-width", 3);
+
+        // Draw the country labels
+        const countryLabels = svg
+          .selectAll(".country-label")
+          .data(data)
+          .enter()
+          .append("text")
+          .attr("class", "country-label")
+          .attr(
+            "x",
+            (d, i) => width / 2 + Math.cos(angleScale(i)) * (radius + 9)
+          )
+          .attr(
+            "y",
+            (d, i) => height / 2 + Math.sin(angleScale(i)) * (radius + 9)
+          )
+          .text((d) => d.country)
+          .attr("text-anchor", "middle")
+          .attr("alignment-baseline", "middle")
+          .style("font-size", "10px")
+          .attr("transform", (d, i) => {
+            const rotationAngle = (angleScale(i) * 180) / Math.PI;
+            const x = width / 2 + Math.cos(angleScale(i)) * (radius + 10);
+            const y = height / 2 + Math.sin(angleScale(i)) * (radius + 10);
+            return `rotate(${rotationAngle}, ${x}, ${y})`;
+          });
+      }
+
+      function updateVisualization(data, yearIndex) {
+        // Get the data for the current year
+        const yearData = data.map((d) => ({
+          country: d.Country,
+          value: parseFloat(d[`F${yearIndex + 1961}`]),
+        }));
+
+        // .slice(0, 150);
+
+        // Draw the year circle and labels
+        drawYearCircle(yearIndex + 1961);
+
+        // Draw the bars and country labels
+        drawBars(yearIndex + 1961, yearData);
+
+        // // Add transition to the bars
+        // const bars = svg.selectAll(".bar").data(yearData);
+
+        // const angleScale = d3
+        //   .scaleLinear()
+        //   .domain([0, data.length * 1.32])
+        //   .range([-2, 2 * Math.PI]);
+        // // Add transition to the updated bars
+        // bars
+        //   .transition()
+        //   .duration(1800) // Set the transition duration to 1800ms (1.8 seconds)
+        //   .attr(
+        //     "x2",
+        //     (d, i) =>
+        //       width / 2 +
+        //       Math.cos(angleScale(i)) *
+        //         (radius / 4 + barHeightScale(d.value || 0))
+        //   )
+        //   .attr(
+        //     "y2",
+        //     (d, i) =>
+        //       height / 2 +
+        //       Math.sin(angleScale(i)) *
+        //         (radius / 4 + barHeightScale(d.value || 0))
+        //   );
+        // .attr(
+        //   "x2",
+        //   (d, i) =>
+        //     width / 2 +
+        //     Math.cos(angleScale(i)) * (radius / 4 + (radius / 4) * d.value)
+        // )
+        // .attr(
+        //   "y2",
+        //   (d, i) =>
+        //     height / 2 +
+        //     Math.sin(angleScale(i)) * (radius / 4 + (radius / 4) * d.value)
+        // );
+      }
+
+      function loopVisualization(data) {
+        let yearIndex = 0;
+
+        setInterval(() => {
+          updateVisualization(data, yearIndex);
+
+          // Increment the year index
+          yearIndex++;
+
+          // If the end of the year list is reached, reset the year index
+          if (yearIndex >= 62) {
+            // 2022 - 1961 + 1 = 62 years
+            yearIndex = 0;
+          }
+        }, 1500);
+      }
+
+      // Load the data and start the visualization loop
+      d3.csv("data.csv").then(function (data) {
+        loopVisualization(data);
+      });
+    </script>
+  </body>
+</html>
